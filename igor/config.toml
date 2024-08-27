@@ -4,7 +4,6 @@ state_dbfile = "igor.sqlite"
 
 [channels.discord]
 class = "Discord"
-bot_token = "Bot xxx"
 [channels.console]
 class = "Console"
 
