@@ -1,13 +1,16 @@
 state_dbfile = "igor.sqlite"
 
 [channels]
-[channels.console]
-class = "Console"
 
 [channels.discord]
 class = "Discord"
 bot_token = "Bot xxx"
+[channels.console]
+class = "Console"
 
 [reactors]
+
 [reactors.fortune]
 class = "Fortune"
+[reactors.echoreactor]
+class = "EchoReactor"
