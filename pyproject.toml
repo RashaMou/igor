@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "igor"
+version = "0.1.0"
+description = ""
+authors = ["Rasha Moumneh <rasha@fastmailteam.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12.2"
+asyncio = "^3.4.3"
+requests = "^2.31.0"
+websocket = "^0.2.1"
+toml = "^0.10.2"
+websockets = "^12.0"
+aiohttp = "^3.9.5"
+discord-py = "^2.3.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
