@@ -38,7 +38,7 @@ class Hub:
 
     def __init__(self, config_file: str) -> None:
         self.config = self.load_config(config_file)
-        self.channels = []
+        self.channels = {}
         self.reactors = []
 
     def load_config(self, path: str) -> dict:
@@ -59,21 +59,21 @@ class Hub:
 
     def initialize_channels(self) -> None:
         if "channels" in self.config:
-            for _, channel_config in self.config["channels"].items():
+            for channel_name, channel_config in self.config["channels"].items():
                 ChannelClass = self.get_class_by_name(
-                    "channel", channel_config["class"]
+                    "channels", channel_config["class"]
                 )
                 if ChannelClass:
                     del channel_config["class"]
                     channel = ChannelClass(self, **channel_config)
-                    self.channels.append(channel)
+                    self.channels[channel_name] = channel
             print(f"initialized following channels: {self.channels}")
 
     def initialize_reactors(self) -> None:
         if "reactors" in self.config:
             for _, reactor_config in self.config["reactors"].items():
                 ReactorClass = self.get_class_by_name(
-                    "reactor", reactor_config["class"]
+                    "reactors", reactor_config["class"]
                 )
                 if ReactorClass:
                     reactor = ReactorClass(self)
