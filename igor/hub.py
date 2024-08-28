@@ -54,8 +54,8 @@ class Hub:
         module = __import__(f"{type}.{class_name.lower()}", fromlist=[class_name])
         try:
             return getattr(module, class_name)
-        except AttributeError:
-            pass
+        except AttributeError as e:
+            print(f"Error getting class by name: {e}")
 
     def initialize_channels(self) -> None:
         if "channels" in self.config:
