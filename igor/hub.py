@@ -1,5 +1,8 @@
 import os
 import sys
+import asyncio
+from igor.response import Response
+from igor.event import Event
 
 import toml
 
@@ -9,31 +12,6 @@ class Hub:
     The Hub class is the central coordinator of the application. It manages the
     initialization and lifecycle of channels and reactors. All its methods run
     asynchronously.
-
-    Attributes:
-    - config (dict): Config settings loaded from a TOML file
-    - channels (list): A list of registered channels
-    - reactors (list): A list of registered reactors.
-
-    Methods:
-    - __init__(self, config_file: str) -> None:
-        Initializes the Hub instance with the specified config file
-    - load_config(self, path: str) -> dict:
-        Loads the config settings from the specified TOML file
-    -  config_path(self) -> str:
-        Returns the path to the default configuration file
-    - get_class_by_name(self, class_name: str) -> type:
-        Retrieves a class by its name from the global scope
-    - initialize_channels(self) -> None:
-        Initialize the channels based on the config settings
-    - initialize_reactors -> None:
-        Initialize the reactors based on the config settings
-    - start(self) -> None:
-        Starts the Hub by initializing channels and reactors and putting
-        channels in listening mode
-    - event_handler(self, event: Any) -> None:
-        Handles incoming events by passing them to the appropriate reactors for
-        processing
     """
 
     def __init__(self, config_file: str) -> None:
@@ -47,8 +25,24 @@ class Hub:
         return config
 
     def config_path(self) -> str:
+        """
+        Loads the config settings from the specified TOML file
+        """
         current_dir = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(current_dir, "config.toml")
+
+    async def start(self) -> None:
+        """
+        Kicks off the initialization of the channels and reactors
+
+        Iterates over all the channels registered with the hub and puts them in
+        listening mode.
+        """
+        self.initialize_channels()
+        self.initialize_reactors()
+
+        for channel in self.channels.values():
+            await channel.start_listening()
 
     def get_class_by_name(self, type, class_name: str):
         module = __import__(f"{type}.{class_name.lower()}", fromlist=[class_name])
@@ -80,29 +74,28 @@ class Hub:
                     self.reactors.append(reactor)
             print(f"initialized following reactors: {self.reactors}")
 
-    def start(self) -> None:
+
+    async def process_event(self, event: Event):
         """
-        Kicks off the initialization of the channels and reactors
-
-        Iterates over all the channels registered with the hub and puts them in
-        listening mode.
+        Processes events sent from channels. It checks if any reactors should
+        react to the event, and if so, kicks off sending the event and response
+        to the appropriate channel
         """
-
-        self.initialize_channels()
-        self.initialize_reactors()
-
-        for channel in self.channels:
-            channel.start_listening()
-
-    def event_handler(self, event: str) -> None:
-        """
-        It receives events and iterates through the list of reactors. For each
-        reactor, it checks whether the reactor is interested in the event, and
-        if so, it calls the reactor's handle_event method to process the event.
-        """
-        if event == "q":
-            sys.exit()
-
         for reactor in self.reactors:
-            if reactor.check_event(event):
-                reactor.handle_event(event)
+            if reactor.can_handle(event):
+                response = await reactor.handle(event)
+                if response:
+                    await self.send_response(event, response)
+                    return  # Stop after first matching reactor
+
+    async def send_response(self, event: Event, response: Response):
+        """
+        Sends incoming events and their responses to the appropriate channel
+        """
+        channel_name = event.channel
+        if channel_name in self.channels:
+            channel = self.channels[channel_name]
+            await channel.send_response(event, response.content)
+        else:
+            print(f"Channel {channel_name} not found")
+
