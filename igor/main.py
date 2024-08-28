@@ -1,19 +1,17 @@
 import asyncio
 import os
-
 from igor.hub import Hub
 
-
 async def main():
-    # initialize the hub
-    config_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "config.toml"
-    )
+    config_path = os.path.join(os.path.dirname(__file__), 'config.toml')
+ 
     hub = Hub(config_path)
 
-    hub.start()
-
+    try:
+        await hub.start()
+        await asyncio.Event().wait()
+    except KeyboardInterrupt:
+        print("Shutting down Igor...")
 
 if __name__ == "__main__":
-    # initialize the loop
     asyncio.run(main())
