@@ -14,20 +14,36 @@ class Discord(Channel):
         self.bot_token = os.getenv('DISCORD_BOT_TOKEN')
         self.api = DiscordAPI(self.bot_token)
 
-    def _initialize_discord_client(self):
-        client = DiscordAPI(self.bot_token)
-        return client
+    async def start_listening(self):
+        connection_task = asyncio.create_task(self.keep_connected())
+        listen_task = asyncio.create_task(self.listen_for_events())
+        await asyncio.gather(connection_task, listen_task)
 
-    def start_listening(self):
-        # start the gateway i guess?
-        pass
-
-    async def connect(self):
-        await self.discord.connect()
+    async def keep_connected(self):
+        while True:
+            try:
+                await self.api.connect()
+            except Exception as e:
+                print(f"Connection error: {e}, reconnecting...")
+                await asyncio.sleep(5)
+ 
+    async def listen_for_events(self):
+        while True:
+            try:
+                discord_event = await self.api.get_next_event()
+                if discord_event['d']['content'].lower().startswith("igor"):
+                    igor_event = self.igor_event_from_discord_event(discord_event)
+                    await self.hub.process_event(igor_event)
+            except Exception as e:
+                await asyncio.sleep(1)  # Avoid tight loop in case of recurring errors
 
     def igor_event_from_discord_event(self, discord_event):
-        pass
-        # initialize event here
+        return Event(
+            channel="discord",
+            type="message",
+            content=discord_event['d']['content'],
+            discord_channel_id=discord_event['d']['channel_id']
+        )
 
-    async def send_message(self, message):
-        await self.discord.send_message(message, "general")
+    async def send_response(self, event, response):
+        await self.api.send_message(event.discord_channel_id, response)
