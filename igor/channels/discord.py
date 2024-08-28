@@ -1,16 +1,18 @@
 import asyncio
+import os
 
+from igor.channels.base_channel import Channel
 from igor.event import Event
-from igor.external.discord import DiscordAPI
+from igor.external.discord_api import DiscordAPI
+from dotenv import load_dotenv
 
+load_dotenv()
 
-class Discord:
-    """ """
-
-    def __init__(self, hub, bot_token):
-        self.hub = hub
-        self.bot_token = bot_token
-        self.discord = self._initialize_discord_client()
+class Discord(Channel):
+    def __init__(self, hub):
+        super().__init__(hub)
+        self.bot_token = os.getenv('DISCORD_BOT_TOKEN')
+        self.api = DiscordAPI(self.bot_token)
 
     def _initialize_discord_client(self):
         client = DiscordAPI(self.bot_token)
