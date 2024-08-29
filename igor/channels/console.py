@@ -1,21 +1,36 @@
 import asyncio
 import sys
+from igor.event import Event
+from igor.channels.base_channel import Channel
 
 
-class Console:
+class Console(Channel):
     def __init__(self, hub):
-        self.hub = hub
+        super().__init__(hub)
 
-    def start_listening(self):
+    async def start_listening(self):
         while True:
-            user_input = self.async_input("listening... \n")
-            if user_input == "q":
-                sys.exit()
+            try:
+                user_input = await self.async_input("> ")
+                if user_input.lower().startswith("igor"):
+                    event = Event(
+                        type="message",
+                        content=user_input,
+                        channel="console"
+                    )
+                    await self.hub.process_event(event)
+                elif user_input.lower() == "q":
+                    self.hub.signal_shutdown()
+                    print(f"{self.__class__.__name__} is shutting down")
+                    break
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
-            print(f"you said: {user_input}")
+    async def async_input(self, prompt):
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, input, prompt)
 
-    @staticmethod
-    def async_input(prompt):
-        # to thread runs the input method in a separate thread because it is a
-        # blocking call and would otherwise block the asyncio event loop
-        return (input, prompt)
+    async def send_response(self, event, response, channel_id=None):
+        print(f"Igor: {response}")
