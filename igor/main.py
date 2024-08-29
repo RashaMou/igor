@@ -9,9 +9,8 @@ async def main():
 
     try:
         await hub.start()
-        await asyncio.Event().wait()
-    except KeyboardInterrupt:
-        print("Shutting down Igor...")
+    except Exception as e:
+        print(f"Error starting the hub: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
