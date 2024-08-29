@@ -18,6 +18,8 @@ class Hub:
         self.config = self.load_config(config_file)
         self.channels = {}
         self.reactors = []
+        self.shutdown_event = asyncio.Event()
+        self.tasks = []
 
     def load_config(self, path: str) -> dict:
         with open(path, "r", encoding="utf-8") as config_file:
@@ -42,7 +44,21 @@ class Hub:
         self.initialize_reactors()
 
         for channel in self.channels.values():
-            await channel.start_listening()
+            self.tasks.append(asyncio.create_task(channel.start_listening()))
+
+        # wait for shutdown_event
+        await self.shutdown_event.wait()
+
+        await asyncio.gather(*self.tasks, return_exceptions=True)
+
+    def signal_shutdown(self):
+        """
+        Signal the shutdown event to stop all channels.
+        """
+        self.shutdown_event.set()
+
+        for task in self.tasks:
+            task.cancel()
 
     def get_class_by_name(self, type, class_name: str):
         module = __import__(f"{type}.{class_name.lower()}", fromlist=[class_name])
