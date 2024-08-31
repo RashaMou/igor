@@ -13,14 +13,22 @@ class Discord(Channel):
         super().__init__(hub)
         self.bot_token = os.getenv('DISCORD_BOT_TOKEN')
         self.api = DiscordAPI(self.bot_token)
+        self.running = False
 
     async def start_listening(self):
-        connection_task = asyncio.create_task(self.keep_connected())
-        listen_task = asyncio.create_task(self.listen_for_events())
-        await asyncio.gather(connection_task, listen_task)
+        self.running = True
+        self.connection_task = asyncio.create_task(self.keep_connected())
+        self.listen_task = asyncio.create_task(self.listen_for_events())
 
+    async def stop_listening(self):
+        self.running = False
+        if hasattr(self, 'connection_task'):
+            self.connection_task.cancel()
+        if hasattr(self, 'listen_task'):
+            self.listen_task.cancel()
+ 
     async def keep_connected(self):
-        while True:
+        while self.running:
             try:
                 await self.api.connect()
             except Exception as e:
@@ -28,7 +36,7 @@ class Discord(Channel):
                 await asyncio.sleep(5)
  
     async def listen_for_events(self):
-        while True:
+        while self.running:
             try:
                 discord_event = await self.api.get_next_event()
                 if discord_event['d']['content'].lower().startswith("igor"):
