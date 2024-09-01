@@ -4,10 +4,10 @@
 
 ### 1.1 Purpose
 
-Igor is a bot that allows users to send and recieve messages via various
-platforms, including Slack, Console, and Twilio. The purpose of this document is
-to provide a technical overview of Igor's architecture, components, and
-functionality.
+Igor is an event-driven multi-channel bot framework that allows users to send
+and recieve messages to and from various platforms (e.g. Discord, the console,
+WhatsApp, Twilio). The purpose of this document is to provide a technical
+overview of Igor's architecture, components, and functionality.
 
 ### 1.2 Scope
 
