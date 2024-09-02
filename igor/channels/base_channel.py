@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 from igor.event import Event
 from igor.response import Response
 from igor.hub import Hub

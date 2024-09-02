@@ -13,14 +13,10 @@ class Console(Channel):
             try:
                 user_input = await self.async_input("> ")
                 if user_input.lower().startswith("igor"):
-                    event = Event(
-                        type="message",
-                        content=user_input,
-                        channel="console"
-                    )
+                    event = channel_event_to_igor_event(user_input)
                     await self.hub.process_event(event)
                 elif user_input.lower() == "q":
-                    self.hub.signal_shutdown()
+                    self.stop_listening()
                     print(f"{self.__class__.__name__} is shutting down")
                     break
             except asyncio.CancelledError:
@@ -32,5 +28,16 @@ class Console(Channel):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, input, prompt)
 
+    def channel_event_to_igor_event(self, input):
+        return Event(
+            type="message",
+            content=input,
+            channel="console"
+        )
+
     async def send_response(self, event, response, channel_id=None):
         print(f"Igor: {response}")
+
+    async def stop_listening(self):
+        self.hub.signal_shutdown()
+
