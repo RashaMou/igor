@@ -40,12 +40,12 @@ class Discord(Channel):
             try:
                 discord_event = await self.api.get_next_event()
                 if discord_event['d']['content'].lower().startswith("igor"):
-                    igor_event = self.igor_event_from_discord_event(discord_event)
+                    igor_event = self.igor_event_from_channel_event(discord_event)
                     await self.hub.process_event(igor_event)
             except Exception as e:
                 await asyncio.sleep(1)  # Avoid tight loop in case of recurring errors
 
-    def igor_event_from_discord_event(self, discord_event):
+    def igor_event_from_channel_event(self, discord_event):
         return Event(
             channel="discord",
             type="message",
