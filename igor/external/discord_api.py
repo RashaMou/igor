@@ -96,12 +96,11 @@ class DiscordAPI:
             except Exception as e:
                 print(f"Error in receive: {e}")
 
-
     async def send(self, opcode, payload=None):
         """
         Utility function to send data via websocket
         """
-        if payload == None:
+        if payload is None:
             payload = {}
 
         data = self.opcode(opcode, payload)
@@ -131,7 +130,6 @@ class DiscordAPI:
                 print(f"Error sending heartbeat: {e}")
                 return
 
-    
     async def get_next_event(self):
         event = await self.event_queue.get()
         return event
@@ -152,7 +150,9 @@ class DiscordAPI:
     async def reconnect(self):
         if self.resume_gateway_url and self.session_id:
             try:
-                async with websockets.connect(self.resume_gateway_url) as self.websocket:
+                async with websockets.connect(
+                    self.resume_gateway_url
+                ) as self.websocket:
                     await self.resume()
             # TODO: if we don't reconnect in time to resume, we should receive an
             # INVALID_SESSION, so we should create a new connection. The
@@ -172,12 +172,10 @@ class DiscordAPI:
             "d": {
                 "token": self.token,
                 "session_id": self.session_id,
-                "seq": self.sequence_number
-            }
+                "seq": self.sequence_number,
+            },
         }
         await self.send(resume_payload)
-
-    
 
     async def send_request(
         self, request_type: str, path: str, args: Optional[dict] = None

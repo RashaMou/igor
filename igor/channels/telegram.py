@@ -1,9 +1,8 @@
 import os
-import asyncio
 from igor.channels.base_channel import Channel
 from igor.event import Event
 from igor.response import Response
-from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, WebAppInfo
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -12,7 +11,6 @@ from telegram.ext import (
     filters,
 )
 from dotenv import load_dotenv
-import json
 
 load_dotenv()
 

@@ -1,6 +1,6 @@
 import asyncio
-import sys
 from igor.event import Event
+from igor.response import Response
 from igor.channels.base_channel import Channel
 
 
@@ -13,10 +13,10 @@ class Console(Channel):
             try:
                 user_input = await self.async_input("> ")
                 if user_input.lower().startswith("igor"):
-                    event = channel_event_to_igor_event(user_input)
+                    event = self.channel_event_to_igor_event(user_input)
                     await self.hub.process_event(event)
                 elif user_input.lower() == "q":
-                    self.stop_listening()
+                    await self.stop_listening()
                     print(f"{self.__class__.__name__} is shutting down")
                     break
             except asyncio.CancelledError:
@@ -28,16 +28,11 @@ class Console(Channel):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, input, prompt)
 
-    def channel_event_to_igor_event(self, input):
-        return Event(
-            type="message",
-            content=input,
-            channel="console"
-        )
+    def channel_event_to_igor_event(self, event):
+        return Event(type="message", content=event, channel="console")
 
-    async def send_response(self, event, response, channel_id=None):
+    async def send_response(self, event: Event, response: Response):
         print(f"Igor: {response}")
 
     async def stop_listening(self):
         self.hub.signal_shutdown()
-
