@@ -5,8 +5,10 @@ from igor.channels.base_channel import Channel
 from igor.external.discord_api import DiscordAPI
 from dotenv import load_dotenv
 from igor.event import Event
+from igor.logging_config import get_logger
 
 load_dotenv()
+logger = get_logger(__name__)
 
 
 class Discord(Channel):
@@ -32,7 +34,7 @@ class Discord(Channel):
             try:
                 await self.api.connect()
             except Exception as e:
-                print(f"Connection error: {e}, reconnecting...")
+                logger.debug(f"Connection error: {e}, reconnecting...")
                 await asyncio.sleep(5)
 
     async def listen_for_events(self):
@@ -43,7 +45,7 @@ class Discord(Channel):
                     igor_event = self.channel_event_to_igor_event(discord_event)
                     await self.hub.process_event(igor_event)
             except Exception as e:
-                print(f"Error getting next discord event: {e}")
+                logger.debug(f"Error getting next discord event: {e}")
                 await asyncio.sleep(1)  # Avoid tight loop in case of recurring errors
 
     def channel_event_to_igor_event(self, event):

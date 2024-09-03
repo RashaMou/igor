@@ -1,0 +1,179 @@
+diff --git a/igor/channels/console.py b/igor/channels/console.py
+index 5e3e7ee..c278273 100644
+--- a/igor/channels/console.py
++++ b/igor/channels/console.py
+@@ -2,6 +2,9 @@ import asyncio
+ from igor.event import Event
+ from igor.response import Response
+ from igor.channels.base_channel import Channel
++from igor.logging_config import get_logger
++
++logger = get_logger(__name__)
+ 
+ 
+ class Console(Channel):
+@@ -22,7 +25,7 @@ class Console(Channel):
+             except asyncio.CancelledError:
+                 break
+             except Exception as e:
+-                print(f"An error occurred: {e}")
++                logger.debug(f"An error occurred with the console listening: {e}")
+ 
+     async def async_input(self, prompt):
+         loop = asyncio.get_event_loop()
+diff --git a/igor/channels/discord.py b/igor/channels/discord.py
+index 4f37ceb..1a62b3d 100644
+--- a/igor/channels/discord.py
++++ b/igor/channels/discord.py
+@@ -5,8 +5,10 @@ from igor.channels.base_channel import Channel
+ from igor.external.discord_api import DiscordAPI
+ from dotenv import load_dotenv
+ from igor.event import Event
++from igor.logging_config import get_logger
+ 
+ load_dotenv()
++logger = get_logger(__name__)
+ 
+ 
+ class Discord(Channel):
+@@ -32,7 +34,7 @@ class Discord(Channel):
+             try:
+                 await self.api.connect()
+             except Exception as e:
+-                print(f"Connection error: {e}, reconnecting...")
++                logger.debug(f"Connection error: {e}, reconnecting...")
+                 await asyncio.sleep(5)
+ 
+     async def listen_for_events(self):
+@@ -43,7 +45,7 @@ class Discord(Channel):
+                     igor_event = self.channel_event_to_igor_event(discord_event)
+                     await self.hub.process_event(igor_event)
+             except Exception as e:
+-                print(f"Error getting next discord event: {e}")
++                logger.debug(f"Error getting next discord event: {e}")
+                 await asyncio.sleep(1)  # Avoid tight loop in case of recurring errors
+ 
+     def channel_event_to_igor_event(self, event):
+diff --git a/igor/channels/telegram.py b/igor/channels/telegram.py
+index 8dfa389..1e835cb 100644
+--- a/igor/channels/telegram.py
++++ b/igor/channels/telegram.py
+@@ -11,16 +11,23 @@ from telegram.ext import (
+     filters,
+ )
+ from dotenv import load_dotenv
++from igor.logging_config import get_logger
+ 
+ load_dotenv()
++logger = get_logger(__name__)
+ 
+ 
+ class Telegram(Channel):
+     def __init__(self, hub):
+         super().__init__(hub)
+-        self.application = (
+-            ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
+-        )
++
++        token = os.getenv("TELEGRAM_BOT_TOKEN")
++        if token is None:
++            error = "TELEGRAM_BOT_TOKEN environment variable not set"
++            logger.error(error)
++            raise ValueError(error)
++
++        self.application = ApplicationBuilder().token(token).build()
+ 
+     async def start_listening(self):
+         # setup handlers
+@@ -37,34 +44,45 @@ class Telegram(Channel):
+         # start the bot
+         await self.application.initialize()
+         await self.application.start()
++
++        if self.application.updater is None:
++            logger.error("Unable to get application updater")
++            return
++
+         await self.application.updater.start_polling()
+ 
+     async def stop_listening(self):
+         await self.application.shutdown()
+ 
+     async def handle_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
++        if update.effective_chat is None:
++            logger.error("effective_chat is None in handle_start")
++            return
++
+         await context.bot.send_message(
+             chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!"
+         )
+ 
+     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+-        event = self.channel_event_to_igor_event(update, context)
++        event = self.channel_event_to_igor_event(update)
++        setattr(event, "context", context.args)
+         await self.hub.process_event(event)
+ 
+-    def channel_event_to_igor_event(self, update, context):
++    def channel_event_to_igor_event(self, event):
+         # for now we're just handling commands and text messages
+-        update_type = self.get_update_type(update)
++        update_type = self.get_update_type(event)
+ 
++        content = ""
+         if update_type == "message":
+-            content = update.message.text
++            content = event.message.text if event.message and event.message.text else ""
+         elif update_type == "command":
+-            content = " ".join(context.args)
++            content = " ".join(event.context)
+ 
+         event = Event(
+-            type=update_type,
++            type=update_type or "unknown",
+             content=content,
+             channel="telegram",
+-            telegram_chat_id=update.effective_chat.id,
++            telegram_chat_id=event.effective_chat.id,
+         )
+         return event
+ 
+diff --git a/igor/hub.py b/igor/hub.py
+index 8b17af0..3ba484c 100644
+--- a/igor/hub.py
++++ b/igor/hub.py
+@@ -2,9 +2,12 @@ import os
+ import asyncio
+ from igor.response import Response
+ from igor.event import Event
++from igor.logging_config import get_logger
+ 
+ import toml
+ 
++logger = get_logger(__name__)
++
+ 
+ class Hub:
+     """
+@@ -94,12 +97,15 @@ class Hub:
+         react to the event, and if so, kicks off sending the event and response
+         to the appropriate channel
+         """
++        logger.debug(f"Processing event: {event}")
+         for reactor in self.reactors:
+             if reactor.can_handle(event):
++                logger.info(f"Reactor {reactor.__class__.__name__} handling event")
+                 response = reactor.handle(event)
+                 if response:
+                     await self.send_channel_response(event, response)
+                     return  # Stop after first matching reactor
++        logger.warning(f"No reactor found to handle event: {event}")
+ 
+     async def send_channel_response(self, event: Event, response: Response):
+         """
+@@ -110,4 +116,4 @@ class Hub:
+             channel = self.channels[channel_name]
+             await channel.send_response(event, response)
+         else:
+-            print(f"Channel {channel_name} not found")
++            logger.warning(f"Channel {channel_name} not found")

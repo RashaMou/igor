@@ -2,6 +2,9 @@ import asyncio
 from igor.event import Event
 from igor.response import Response
 from igor.channels.base_channel import Channel
+from igor.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class Console(Channel):
@@ -22,7 +25,7 @@ class Console(Channel):
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                print(f"An error occurred: {e}")
+                logger.debug(f"An error occurred with the console listening: {e}")
 
     async def async_input(self, prompt):
         loop = asyncio.get_event_loop()
