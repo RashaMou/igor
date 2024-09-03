@@ -108,6 +108,6 @@ class Hub:
         channel_name = event.channel
         if channel_name in self.channels:
             channel = self.channels[channel_name]
-            await channel.send_response(event, response.content)
+            await channel.send_response(event, response)
         else:
             print(f"Channel {channel_name} not found")
