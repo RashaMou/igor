@@ -96,9 +96,9 @@ class Hub:
         """
         for reactor in self.reactors:
             if reactor.can_handle(event):
-                res = reactor.handle(event)
-                if res:
-                    await self.send_channel_response(event, res.content)
+                response = reactor.handle(event)
+                if response:
+                    await self.send_channel_response(event, response)
                     return  # Stop after first matching reactor
 
     async def send_channel_response(self, event: Event, response: Response):
