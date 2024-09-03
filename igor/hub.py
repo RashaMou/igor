@@ -88,7 +88,6 @@ class Hub:
                     self.reactors.append(reactor)
             print(f"initialized following reactors: {self.reactors}")
 
-
     async def process_event(self, event: Event):
         """
         Processes events sent from channels. It checks if any reactors should
@@ -112,4 +111,3 @@ class Hub:
             await channel.send_response(event, response.content)
         else:
             print(f"Channel {channel_name} not found")
-

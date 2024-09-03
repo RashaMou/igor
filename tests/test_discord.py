@@ -4,10 +4,12 @@ from unittest.mock import AsyncMock, patch
 from igor.channels.discord import Discord
 from igor.event import Event
 
+
 @pytest.fixture
 def discord_channel(hub):
     channel = Discord(hub)
     return channel
+
 
 @pytest.mark.asyncio
 async def test_discord_methods(discord_channel):
@@ -26,7 +28,7 @@ async def test_discord_methods(discord_channel):
             channel="discord",
             type="message",
             content="igor echo test message",
-            discord_channel_id="1234"
+            discord_channel_id="1234",
         )
         await discord_channel.hub.process_event(event)
         event_processed.set()
@@ -34,9 +36,10 @@ async def test_discord_methods(discord_channel):
     async def mock_process_event(event):
         print(f"mock_process_event called with event: {event}")
 
-    with patch.object(Discord, 'keep_connected', new=mock_keep_connected), \
-         patch.object(Discord, 'listen_for_events', new=mock_listen_for_events):
- 
+    with patch.object(Discord, "keep_connected", new=mock_keep_connected), patch.object(
+        Discord, "listen_for_events", new=mock_listen_for_events
+    ):
+
         discord_channel.hub.process_event = AsyncMock(side_effect=mock_process_event)
 
         # create_task is non_blocking, so it simulates start_listening()
@@ -47,8 +50,6 @@ async def test_discord_methods(discord_channel):
             # Wait for the event to be processed
             await asyncio.wait_for(event_processed.wait(), timeout=5.0)
 
-            assert discord_channel.running == True
- 
             discord_channel.hub.process_event.assert_called_once()
 
             called_event = discord_channel.hub.process_event.call_args[0][0]

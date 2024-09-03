@@ -1,15 +1,14 @@
 import pytest
 import asyncio
-import os
 from igor.channels.console import Console
-from igor.hub import Hub
 from igor.event import Event
-from unittest.mock import MagicMock, patch
+
 
 def test_console_creation(hub_with_mocked_process):
     console = Console(hub_with_mocked_process)
     assert isinstance(console, Console)
     assert console.hub == hub_with_mocked_process
+
 
 @pytest.mark.asyncio
 async def test_start_listening(hub_with_mocked_process):
@@ -35,7 +34,7 @@ async def test_start_listening(hub_with_mocked_process):
     except asyncio.TimeoutError:
         listen_task.cancel()
         await asyncio.gather(listen_task, return_exceptions=True)
- 
+
     # Verify that process_event was called with the correct event
     hub = hub_with_mocked_process
     hub.process_event.assert_called_once()
