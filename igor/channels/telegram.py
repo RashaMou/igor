@@ -11,16 +11,23 @@ from telegram.ext import (
     filters,
 )
 from dotenv import load_dotenv
+from igor.logging_config import get_logger
 
 load_dotenv()
+logger = get_logger(__name__)
 
 
 class Telegram(Channel):
     def __init__(self, hub):
         super().__init__(hub)
-        self.application = (
-            ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
-        )
+
+        token = os.getenv("TELEGRAM_BOT_TOKEN")
+        if token is None:
+            error = "TELEGRAM_BOT_TOKEN environment variable not set"
+            logger.error(error)
+            raise ValueError(error)
+
+        self.application = ApplicationBuilder().token(token).build()
 
     async def start_listening(self):
         # setup handlers
@@ -37,34 +44,45 @@ class Telegram(Channel):
         # start the bot
         await self.application.initialize()
         await self.application.start()
+
+        if self.application.updater is None:
+            logger.error("Unable to get application updater")
+            return
+
         await self.application.updater.start_polling()
 
     async def stop_listening(self):
         await self.application.shutdown()
 
     async def handle_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if update.effective_chat is None:
+            logger.error("effective_chat is None in handle_start")
+            return
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!"
         )
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        event = self.channel_event_to_igor_event(update, context)
+        event = self.channel_event_to_igor_event(update)
+        setattr(event, "context", context.args)
         await self.hub.process_event(event)
 
-    def channel_event_to_igor_event(self, update, context):
+    def channel_event_to_igor_event(self, event):
         # for now we're just handling commands and text messages
-        update_type = self.get_update_type(update)
+        update_type = self.get_update_type(event)
 
+        content = ""
         if update_type == "message":
-            content = update.message.text
+            content = event.message.text if event.message and event.message.text else ""
         elif update_type == "command":
-            content = " ".join(context.args)
+            content = " ".join(event.context)
 
         event = Event(
-            type=update_type,
+            type=update_type or "unknown",
             content=content,
             channel="telegram",
-            telegram_chat_id=update.effective_chat.id,
+            telegram_chat_id=event.effective_chat.id,
         )
         return event
 
