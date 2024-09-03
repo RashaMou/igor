@@ -51,7 +51,7 @@ class Channel(ABC):
         pass
 
     @abstractmethod
-    def channel_event_to_igor_event(self, channel_event: Any) -> Event:
+    def channel_event_to_igor_event(self, event: Any) -> Event:
         """
         Convert a channel-specific event to an Igor Event.
 

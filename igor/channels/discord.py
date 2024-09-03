@@ -8,10 +8,11 @@ from igor.event import Event
 
 load_dotenv()
 
+
 class Discord(Channel):
     def __init__(self, hub):
         super().__init__(hub)
-        self.api = DiscordAPI(os.getenv('DISCORD_BOT_TOKEN'))
+        self.api = DiscordAPI(os.getenv("DISCORD_BOT_TOKEN"))
         self.running = False
 
     async def start_listening(self):
@@ -21,11 +22,11 @@ class Discord(Channel):
 
     async def stop_listening(self):
         self.running = False
-        if hasattr(self, 'connection_task'):
+        if hasattr(self, "connection_task"):
             self.connection_task.cancel()
-        if hasattr(self, 'listen_task'):
+        if hasattr(self, "listen_task"):
             self.listen_task.cancel()
- 
+
     async def keep_connected(self):
         while self.running:
             try:
@@ -33,23 +34,24 @@ class Discord(Channel):
             except Exception as e:
                 print(f"Connection error: {e}, reconnecting...")
                 await asyncio.sleep(5)
- 
+
     async def listen_for_events(self):
         while self.running:
             try:
                 discord_event = await self.api.get_next_event()
-                if discord_event['d']['content'].lower().startswith("igor"):
+                if discord_event["d"]["content"].lower().startswith("igor"):
                     igor_event = self.channel_event_to_igor_event(discord_event)
                     await self.hub.process_event(igor_event)
             except Exception as e:
+                print(f"Error getting next discord event: {e}")
                 await asyncio.sleep(1)  # Avoid tight loop in case of recurring errors
 
-    def channel_event_to_igor_event(self, channel_event):
+    def channel_event_to_igor_event(self, event):
         return Event(
             channel="discord",
             type="message",
-            content=channel_event['d']['content'],
-            discord_channel_id=channel_event['d']['channel_id']
+            content=event["d"]["content"],
+            discord_channel_id=event["d"]["channel_id"],
         )
 
     async def send_response(self, event, response):
