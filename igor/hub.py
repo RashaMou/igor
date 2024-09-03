@@ -2,8 +2,11 @@ import os
 import asyncio
 from igor.response import Response
 from igor.event import Event
+from igor.logging_config import get_logger
 
 import toml
+
+logger = get_logger(__name__)
 
 
 class Hub:
@@ -94,12 +97,15 @@ class Hub:
         react to the event, and if so, kicks off sending the event and response
         to the appropriate channel
         """
+        logger.debug(f"Processing event: {event}")
         for reactor in self.reactors:
             if reactor.can_handle(event):
+                logger.info(f"Reactor {reactor.__class__.__name__} handling event")
                 response = reactor.handle(event)
                 if response:
                     await self.send_channel_response(event, response)
                     return  # Stop after first matching reactor
+        logger.warning(f"No reactor found to handle event: {event}")
 
     async def send_channel_response(self, event: Event, response: Response):
         """
@@ -110,4 +116,4 @@ class Hub:
             channel = self.channels[channel_name]
             await channel.send_response(event, response)
         else:
-            print(f"Channel {channel_name} not found")
+            logger.warning(f"Channel {channel_name} not found")
