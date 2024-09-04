@@ -17,44 +17,44 @@ def echoreactor(hub):
 def test_can_handle(echoreactor):
     # Test cases that should return True
     assert echoreactor.can_handle(
-        Event(type="message", content="igor echo hello", channel="console")
+        Event(event_type="message", content="igor echo hello", channel="console")
     )
     assert echoreactor.can_handle(
-        Event(type="message", content="IGOR ECHO test", channel="console")
+        Event(event_type="message", content="IGOR ECHO test", channel="console")
     )
 
     # Test cases that should return False
     assert not echoreactor.can_handle(
-        Event(type="message", content="hello igor", channel="console")
+        Event(event_type="message", content="hello igor", channel="console")
     )
     assert not echoreactor.can_handle(
-        Event(type="not_message", content="igor echo test", channel="console")
+        Event(event_type="not_message", content="igor echo test", channel="console")
     )
 
 
 @pytest.mark.asyncio
 def test_handle(echoreactor):
     # test with a message
-    event = Event(type="message", content="Igor echo yo hey", channel="console")
+    event = Event(event_type="message", content="Igor echo yo hey", channel="console")
 
     response = echoreactor.handle(event)
     assert isinstance(response, Response)
     assert response.content == "yo hey"
 
     # test with an empty message
-    event = Event(type="message", content="Igor echo", channel="console")
+    event = Event(event_type="message", content="Igor echo", channel="console")
 
     response = echoreactor.handle(event)
     assert response.content == "You didn't say anything"
 
     # test with trailing whitespace
-    event = Event(type="message", content="Igor echo heyo ", channel="console")
+    event = Event(event_type="message", content="Igor echo heyo ", channel="console")
 
     response = echoreactor.handle(event)
     assert response.content == "heyo"
 
     # test with leading whitespace
-    event = Event(type="message", content=" Igor echo heyo", channel="console")
+    event = Event(event_type="message", content=" Igor echo heyo", channel="console")
 
     response = echoreactor.handle(event)
     assert response.content == "heyo"

@@ -80,10 +80,10 @@ class Telegram(Channel):
             content = " ".join(event.context)
 
         event = Event(
-            type=update_type or "unknown",
+            event_type=update_type or "unknown",
             content=content,
             channel="telegram",
-            telegram_chat_id=event.effective_chat.id,
+            extra={"chat_id": event.effective_chat.id},
         )
         return event
 

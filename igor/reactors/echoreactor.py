@@ -7,7 +7,9 @@ class EchoReactor(Reactor):
         super().__init__(hub)
 
     def can_handle(self, event):
-        return event.type == "message" and event.content.lower().startswith("igor echo")
+        return event.event_type == "message" and event.content.lower().startswith(
+            "igor echo"
+        )
 
     def handle(self, event):
         message = event.content.lower().split("igor echo")
