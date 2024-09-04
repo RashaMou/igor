@@ -12,7 +12,7 @@ class Fortune(Reactor):
         ]
 
     def can_handle(self, event):
-        return event.type == "message" and event.content.lower().startswith(
+        return event.event_type == "message" and event.content.lower().startswith(
             "igor fortune"
         )
 

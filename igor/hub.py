@@ -66,7 +66,7 @@ class Hub:
         try:
             return getattr(module, class_name)
         except AttributeError as e:
-            print(f"Error getting class by name: {e}")
+            logger.error(f"Error getting class by name: {e}")
 
     def initialize_channels(self) -> None:
         if "channels" in self.config:
@@ -78,7 +78,7 @@ class Hub:
                     del channel_config["class"]
                     channel = ChannelClass(self, **channel_config)
                     self.channels[channel_name] = channel
-            print(f"initialized following channels: {self.channels}")
+                logger.info(f"initialized {channel_name.capitalize()} channel")
 
     def initialize_reactors(self) -> None:
         if "reactors" in self.config:
@@ -89,7 +89,7 @@ class Hub:
                 if ReactorClass:
                     reactor = ReactorClass(self)
                     self.reactors.append(reactor)
-            print(f"initialized following reactors: {self.reactors}")
+                logger.info(f"initialized {reactor_config["class"]} reactor")
 
     async def process_event(self, event: Event):
         """
