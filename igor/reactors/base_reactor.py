@@ -42,7 +42,7 @@ class Reactor(ABC):
         pass
 
     @abstractmethod
-    def handle(self, event: Event) -> Response:
+    async def handle(self, event: Event) -> Response:
         """
         Handle the given event and generate a response.
 
