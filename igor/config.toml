@@ -17,3 +17,5 @@ class = "Fortune"
 class = "EchoReactor"
 [reactors.catpic]
 class = "CatPic"
+[reactors.sentiment]
+class = "SentimentReactor"
