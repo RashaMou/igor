@@ -32,7 +32,7 @@ class Console(Channel):
         return await loop.run_in_executor(None, input, prompt)
 
     def channel_event_to_igor_event(self, event):
-        return Event(type="message", content=event, channel="console")
+        return Event(event_type="message", content=event, channel="console")
 
     async def send_response(self, event: Event, response: Response):
         print(f"Igor: {response}")

@@ -51,10 +51,10 @@ class Discord(Channel):
     def channel_event_to_igor_event(self, event):
         return Event(
             channel="discord",
-            type="message",
+            event_type="message",
             content=event["d"]["content"],
-            discord_channel_id=event["d"]["channel_id"],
+            extra={"discord_channel_id": event["d"]["channel_id"]},
         )
 
     async def send_response(self, event, response):
-        await self.api.send_message(event.discord_channel_id, response)
+        await self.api.send_message(event.extra["discord_channel_id"], response.content)
