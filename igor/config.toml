@@ -15,3 +15,5 @@ class = "Telegram"
 class = "Fortune"
 [reactors.echoreactor]
 class = "EchoReactor"
+[reactors.catpic]
+class = "CatPic"
