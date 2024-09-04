@@ -97,11 +97,11 @@ class Hub:
         react to the event, and if so, kicks off sending the event and response
         to the appropriate channel
         """
-        logger.debug(f"Processing event: {event}")
+        logger.info(f"Processing event: {event}")
         for reactor in self.reactors:
             if reactor.can_handle(event):
                 logger.info(f"Reactor {reactor.__class__.__name__} handling event")
-                response = reactor.handle(event)
+                response = await reactor.handle(event)
                 if response:
                     await self.send_channel_response(event, response)
                     return  # Stop after first matching reactor

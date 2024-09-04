@@ -16,6 +16,6 @@ class Fortune(Reactor):
             "igor fortune"
         )
 
-    def handle(self, event):
+    async def handle(self, event):
         fortune = random.choice(self.fortunes)
         return Response(content=fortune, channel=event.channel)
