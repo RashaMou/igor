@@ -42,8 +42,8 @@ jobs:
       - name: Check formatting with Black
         run: poetry run black --check --diff .
 
-      - name: Lint with flake8
-        run: poetry run flake8 .
+      - name: Lint with ruff
+        run: poetry run ruff check .
 
       - name: Test with pytest
         run: poetry run pytest tests/

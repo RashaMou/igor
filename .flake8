@@ -1,4 +1,0 @@
-[flake8]
-max-complexity = 10
-exclude = .git, __pycache__,.venv/lib/,.venv/bin
-max-line-length = 120
