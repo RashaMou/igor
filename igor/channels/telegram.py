@@ -63,9 +63,10 @@ class Telegram(Channel):
         )
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        event = self.channel_event_to_igor_event(update)
-        setattr(event, "context", context.args)
-        await self.hub.process_event(event)
+        if update.message.text.lower().startswith("igor"):
+            event = self.channel_event_to_igor_event(update)
+            setattr(event, "context", context.args)
+            await self.hub.process_event(event)
 
     def channel_event_to_igor_event(self, event):
         # for now we're just handling commands and text messages
