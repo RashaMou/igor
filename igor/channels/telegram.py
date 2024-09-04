@@ -56,7 +56,6 @@ class Telegram(Channel):
 
     async def handle_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_chat is None:
-            logger.error("effective_chat is None in handle_start")
             return
 
         await context.bot.send_message(
