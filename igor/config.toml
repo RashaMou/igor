@@ -19,3 +19,5 @@ class = "EchoReactor"
 class = "CatPic"
 [reactors.sentiment]
 class = "SentimentReactor"
+[reactors.help]
+class = "Help"
