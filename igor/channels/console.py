@@ -16,7 +16,7 @@ class Console(Channel):
                     event = Event(type="message", content=user_input, channel="console")
                     await self.hub.process_event(event)
                 elif user_input.lower() == "q":
-                    self.stop_listening()
+                    await self.stop_listening()
                     print(f"{self.__class__.__name__} is shutting down")
                     break
             except asyncio.CancelledError:

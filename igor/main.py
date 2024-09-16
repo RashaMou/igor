@@ -4,6 +4,7 @@ from igor.hub import Hub
 from igor.logging_config import setup_logging, get_logger
 
 
+
 async def main():
     setup_logging()
     logger = get_logger(__name__)
@@ -18,6 +19,7 @@ async def main():
         await hub.start()
     except Exception as e:
         logger.error(f"Error starting the hub: {e}", exc_info=True)
+
 
 
 if __name__ == "__main__":

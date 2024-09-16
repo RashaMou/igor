@@ -5,19 +5,17 @@ from igor.channels.base_channel import Channel
 from igor.external.discord_api import DiscordAPI
 from dotenv import load_dotenv
 from igor.event import Event
-<<<<<<< HEAD
 from igor.logging_config import get_logger
-=======
->>>>>>> 04aaefb (Add documentation and types to base_channel and base_reactor)
 
 load_dotenv()
 logger = get_logger(__name__)
 
 
+
 class Discord(Channel):
     def __init__(self, hub):
         super().__init__(hub)
-        self.api = DiscordAPI(os.getenv('DISCORD_BOT_TOKEN'))
+        self.api = DiscordAPI(os.getenv("DISCORD_BOT_TOKEN"))
         self.running = False
 
     async def start_listening(self):

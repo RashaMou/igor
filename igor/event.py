@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Dict, Any
 
-
 @dataclass
 class Event:
     event_type: str
