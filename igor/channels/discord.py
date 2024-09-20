@@ -11,7 +11,6 @@ load_dotenv()
 logger = get_logger(__name__)
 
 
-
 class Discord(Channel):
     def __init__(self, hub):
         super().__init__(hub)
