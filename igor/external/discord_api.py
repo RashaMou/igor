@@ -1,11 +1,14 @@
 import asyncio
 import json
-from typing import Optional
+from igor.client import send_request
+from igor.logging_config import get_logger
 
-import aiohttp
+
 import websockets
 
 from igor.utils import op
+
+logger = get_logger(__name__)
 
 
 class DiscordAPI:
@@ -31,6 +34,12 @@ class DiscordAPI:
         self.resume_gateway_url = None
         self.reconnect_codes = [4000, 4001, 4002, 4003, 4005, 4007, 4008, 4009, 7]
         self.event_queue = asyncio.Queue()
+        self.headers = {
+            "User-Agent": f"DiscordBot (https://example.com, {self.version})",
+            "Authorization": self.token,
+        }
+        logger.debug(f"token is: {self.token}")
+        logger.debug(f"DiscordAPI initialized with headers: {self.headers}")
 
     async def connect(self):
         """
@@ -39,9 +48,10 @@ class DiscordAPI:
         the length of time in ms that determines how often to send a heartbeat
         event in order to maintain the connection.
         """
+        url = self.base_url + "/gateway"
         while True:
             try:
-                data = await self.send_request("get", "/gateway")
+                data = await send_request("get", url, optional_headers=self.headers)
                 if data is None:
                     return None
                 wss_url = data["url"]
@@ -177,36 +187,9 @@ class DiscordAPI:
         }
         await self.send(resume_payload)
 
-    async def send_request(
-        self, request_type: str, path: str, args: Optional[dict] = None
-    ):
-        if args is None:
-            args = {}
-
-        url = self.base_url + path
-
-        headers = {
-            "User-Agent": f"DiscordBot (https://example.com, {self.version})",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Authorization": self.token,
-        }
-
-        # create an async session with context manager
-        async with aiohttp.ClientSession() as session:
-            if request_type.lower() == "get":
-                async with session.get(url, params=args, headers=headers) as response:
-                    if response.status == 200:
-                        return await response.json()
-            elif request_type.lower() == "post":
-                async with session.post(url, json=args, headers=headers) as response:
-                    if response.status == 200:
-                        return await response.json()
-            else:
-                raise ValueError("Unsupported request type")
-
     async def get_guild_id(self):
-        guilds = await self.send_request("get", "/users/@me/guilds")
+        url = f"{self.base_url}/users/@me/guilds"
+        guilds = await send_request("get", url, optional_headers=self.headers)
         if guilds is None:
             return None
         guild_id = next(
@@ -218,7 +201,8 @@ class DiscordAPI:
         guild_id = await self.get_guild_id()
         if guild_id is None:
             return None
-        channels = await self.send_request("get", f"/guilds/{guild_id}/channels")
+        url = f"{self.base_url}/guilds/{guild_id}/channels"
+        channels = await send_request("get", url, optional_headers=self.headers)
         return channels
 
     async def get_channel_id(self, channel_name):
@@ -232,7 +216,8 @@ class DiscordAPI:
         return channel_id
 
     async def send_message(self, channel_id, message):
-        res = await self.send_request(
-            "post", f"/channels/{channel_id}/messages", {"content": message}
+        url = f"{self.base_url}/channels/{channel_id}/messages"
+        res = await send_request(
+            "post", url, {"content": message}, optional_headers=self.headers
         )
         return res

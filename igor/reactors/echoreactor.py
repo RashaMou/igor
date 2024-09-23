@@ -11,7 +11,7 @@ class EchoReactor(Reactor):
             "igor echo"
         )
 
-    async def handle(self, event):
+    def handle(self, event):
         message = event.content.lower().split("igor echo")
         message = "".join(message).strip()
         if message == "":
