@@ -1,6 +1,6 @@
 import asyncio
 import os
-from igor.hub import Hub
+from hub import Hub
 from igor.logging_config import setup_logging, get_logger
 
 

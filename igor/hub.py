@@ -1,8 +1,8 @@
 import os
 import asyncio
-from igor.response import Response
-from igor.event import Event
-from igor.logging_config import get_logger
+from response import Response
+from event import Event
+from logging_config import get_logger
 
 import toml
 
